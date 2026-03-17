@@ -68,10 +68,25 @@ void refcount_free(snek_object_t *obj)
     }
 }
 
+// create new snek_object with refcount
+snek_object_t *_new_snek_object()
+{
+
+    snek_object_t *obj = calloc(1, sizeof(snek_object_t));
+
+    if (obj == NULL)
+    {
+        return NULL;
+    }
+
+    obj->ref_count = 1;
+    return obj;
+}
+
 snek_object_t *new_snek_integer(int value)
 {
 
-    snek_object_t *obj = malloc(sizeof(snek_object_t));
+    snek_object_t *obj = _new_snek_object();
 
     if (obj == NULL)
     {
@@ -87,7 +102,7 @@ snek_object_t *new_snek_integer(int value)
 snek_object_t *new_snek_float(float value)
 {
 
-    snek_object_t *obj = malloc(sizeof(snek_object_t));
+    snek_object_t *obj = _new_snek_object();
     if (obj == NULL)
     {
         return NULL;
@@ -101,7 +116,7 @@ snek_object_t *new_snek_float(float value)
 snek_object_t *new_snek_string(char *value)
 {
 
-    snek_object_t *obj = malloc(sizeof(snek_object_t));
+    snek_object_t *obj = _new_snek_object();
 
     if (obj == NULL)
     {
@@ -133,7 +148,7 @@ snek_object_t *new_snek_vector3(
         return NULL;
     }
 
-    snek_object_t *obj = malloc(sizeof(snek_object_t));
+    snek_object_t *obj = _new_snek_object();
 
     if (obj == NULL)
     {
@@ -158,7 +173,7 @@ snek_object_t *new_snek_vector3(
 snek_object_t *new_snek_array(size_t size)
 {
 
-    snek_object_t *obj = malloc(sizeof(snek_object_t));
+    snek_object_t *obj = _new_snek_object();
 
     if (obj == NULL)
     {
@@ -184,6 +199,7 @@ snek_object_t *new_snek_array(size_t size)
     return obj;
 }
 
+// set elements in snek_array
 bool snek_array_set(
     snek_object_t *snek_obj,
     size_t index,
@@ -200,7 +216,7 @@ bool snek_array_set(
         return false;
     }
 
-    if (index > snek_obj->data.v_array.size)
+    if (index >= snek_obj->data.v_array.size)
     {
         return false;
     }
@@ -213,12 +229,32 @@ bool snek_array_set(
         refcount_dec(elements[index]);
     }
 
+    /*
+
+        it is just a
+        syntactic sugar of
+
+        elements just a pointer,
+        pointing to element
+        (which is itself a pointer, pointing to snek_object/null)
+
+        *(elements + index) (POINTER ARITHMETIC);
+
+        it is saying ,
+        pointer elements , go to
+        plus index ,
+
+        and deference that mem block.
+
+
+    */
     elements[index] = value;
     refcount_inc(elements[index]);
 
     return true;
 }
 
+// get elements from snek_array
 snek_object_t *snek_array_get(snek_object_t *snek_obj, size_t index)
 {
     if (snek_obj == NULL || snek_obj->kind != ARRAY)
@@ -226,7 +262,7 @@ snek_object_t *snek_array_get(snek_object_t *snek_obj, size_t index)
         return NULL;
     }
 
-    if (index > snek_obj->data.v_array.size)
+    if (index >= snek_obj->data.v_array.size)
     {
         return NULL;
     }
@@ -235,20 +271,6 @@ snek_object_t *snek_array_get(snek_object_t *snek_obj, size_t index)
     size_t size = snek_obj->data.v_array.size;
 
     return elements[index];
-}
-
-snek_object_t *_new_snek_object()
-{
-
-    snek_object_t *obj = calloc(1, sizeof(snek_object_t));
-
-    if (obj == NULL)
-    {
-        return NULL;
-    }
-
-    obj->ref_count = 1;
-    return obj;
 }
 
 int main()
